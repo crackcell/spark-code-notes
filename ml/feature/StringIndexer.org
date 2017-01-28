@@ -1,0 +1,15 @@
+# -*- mode: org -*-
+
+#+TITLE: StringIndexer
+#+AUTHOR: Menglong TAN
+#+EMAIL: tanmenglong AT gmail DOT com
+#+DATE: Sat Jan 28 23:54:46 2017
+#+STYLE: <link rel="stylesheet" type="text/css" href="http://blog.crackcell.com/static/org-mode/org-mode.css" />
+#+OPTIONS: ^:{}
+
+#+BEGIN_HTML
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+#+END_HTML
+
+* 简介
+  将输入值转换成下标。
