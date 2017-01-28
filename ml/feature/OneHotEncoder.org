@@ -36,7 +36,7 @@
      3. 从输入列的ML属性中提取属性名
         - 对于NominalAttribute：提取每个value作为名字，否则以取值下标作为名字
         - 对于BinaryAttribute：同nominal
-        - 对于NumericAttribute：抛出异常，不能为
+        - 对于NumericAttribute：抛出异常
      4. 封装输出列属性BinaryAttribute
    #+BEGIN_SRC scala
      if (outputAttrGroup.size < 0) {
