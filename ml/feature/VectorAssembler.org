@@ -12,10 +12,86 @@
 #+END_HTML
 
 * 用途
-  将多个输入列整合成一个向量。例如：
+  将多个输入列整合成一个向量，例如：
   #+BEGIN_SRC scala
   val assembler = new VectorAssembler()
     .setInputCols(Array("fea1", "fea2"))
     .setOutputCol("features")
   val newdata = assembler.transform(dataset)
   #+END_SRC
+* 代码笔记
+  #+BEGIN_SRC scala
+  @Since("1.4.0")
+  class VectorAssembler @Since("1.4.0") (@Since("1.4.0") override val uid: String)
+    extends Transformer with HasInputCols with HasOutputCol with DefaultParamsWritable {
+  #+END_SRC
+  - VectorAssembler是一个Transformer
+  - 接受多个输入列：HasInputCols
+  - 输出一列
+** 工作流程
+   #+BEGIN_SRC scala
+   @Since("2.0.0")
+   override def transform(dataset: Dataset[_]): DataFrame = {
+     transformSchema(dataset.schema, logging = true)
+   #+END_SRC
+   首先检查字段合法性：
+   - 输入列的类型必须是NumericType、BooleanType或者VectorUDT
+   - 输出列必须不存在
+   #+BEGIN_SRC scala
+     // Schema transformation.
+     val schema = dataset.schema
+     lazy val first = dataset.toDF.first()
+     val attrs = $(inputCols).flatMap { c =>
+       val field = schema(c)
+       val index = schema.fieldIndex(c)
+       field.dataType match {
+         case DoubleType =>
+           val attr = Attribute.fromStructField(field)
+           // If the input column doesn't have ML attribute, assume numeric.
+           if (attr == UnresolvedAttribute) {
+             Some(NumericAttribute.defaultAttr.withName(c))
+           } else {
+             Some(attr.withName(c))
+           }
+         case _: NumericType | BooleanType =>
+           // If the input column type is a compatible scalar type, assume numeric.
+           Some(NumericAttribute.defaultAttr.withName(c))
+         case _: VectorUDT =>
+           val group = AttributeGroup.fromStructField(field)
+           if (group.attributes.isDefined) {
+             // If attributes are defined, copy them with updated names.
+             group.attributes.get.zipWithIndex.map { case (attr, i) =>
+               if (attr.name.isDefined) {
+                 // TODO: Define a rigorous naming scheme.
+                 attr.withName(c + "_" + attr.name.get)
+               } else {
+                 attr.withName(c + "_" + i)
+               }
+             }
+           } else {
+             // Otherwise, treat all attributes as numeric. If we cannot get the number of attributes
+             // from metadata, check the first row.
+             val numAttrs = group.numAttributes.getOrElse(first.getAs[Vector](index).size)
+             Array.tabulate(numAttrs)(i => NumericAttribute.defaultAttr.withName(c + "_" + i))
+           }
+         case otherType =>
+           throw new SparkException(s"VectorAssembler does not support the $otherType type")
+       }
+     }
+     val metadata = new AttributeGroup($(outputCol), attrs).toMetadata()
+
+     // Data transformation.
+     val assembleFunc = udf { r: Row =>
+       VectorAssembler.assemble(r.toSeq: _*)
+     }
+     val args = $(inputCols).map { c =>
+       schema(c).dataType match {
+         case DoubleType => dataset(c)
+         case _: VectorUDT => dataset(c)
+         case _: NumericType | BooleanType => dataset(c).cast(DoubleType).as(s"${c}_double_$uid")
+       }
+     }
+
+     dataset.select(col("*"), assembleFunc(struct(args: _*)).as($(outputCol), metadata))
+   }
+   #+END_SRC
