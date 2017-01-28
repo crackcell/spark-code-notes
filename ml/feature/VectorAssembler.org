@@ -41,6 +41,18 @@
      // Schema transformation.
      val schema = dataset.schema
      lazy val first = dataset.toDF.first()
+   #+END_SRC
+   下面开始遍历每个输入列，组装输出列的ML属性信息：
+   - 如果是DoubleType：若输入列有属性信息直接使用。若没有，用列的名字创建属性
+   - 如果是NumericType或者BooleanType：直接用输入列的名字创建属性
+   - 如果是VectorUDT，稍微复杂一点：
+     1. 先尝试从输入列中提取属性信息
+     2. 如果输入列整个向量的属性信息有效，按照规则创建新属性名字，并用名字创建属性：
+        - 如果向量该分量的属性存在：
+          : 输入列名_分量属性名
+        - 如果分量属性不存在：
+          : 输入列名_分量的小标
+   #+BEGIN_SRC scala
      val attrs = $(inputCols).flatMap { c =>
        val field = schema(c)
        val index = schema.fieldIndex(c)
@@ -79,7 +91,12 @@
        }
      }
      val metadata = new AttributeGroup($(outputCol), attrs).toMetadata()
-
+   #+END_SRC
+   提取完ML属性之后，开始进行真正的数据处理：
+   - 定义对每行执行操作的udf。这里有个技巧，如果需要对整行的数据进行处理，该怎么写：
+     - 在DataFrame API里面用struct(args: _*)取到Row
+     - 在定义接受Row的udf
+   #+BEGIN_SRC scala
      // Data transformation.
      val assembleFunc = udf { r: Row =>
        VectorAssembler.assemble(r.toSeq: _*)
