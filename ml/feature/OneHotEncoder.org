@@ -16,17 +16,20 @@
 * 代码笔记
   - OneHotEncoder是一个Transformer，对应一个输入列，一个输出列
   - 有一个略怪异的droplast特性，默认是true，会不对最后一个出现的向量进行编码，而产生一个空向量。个人习惯关掉这个开关，用setDropLast设置
-** 工作流程
+** transform
    #+BEGIN_SRC scala
    @Since("2.0.0")
    override def transform(dataset: Dataset[_]): DataFrame = {
+   #+END_SRC
+   首先进行ML属性的组装过程：
+   - transformSchema组装输出列的schema：
+     1. 校验输入列的类型为NumericType
+     2. 校验输出列不存在
+   #+BEGIN_SRC scala
      // schema transformation
      val inputColName = $(inputCol)
      val outputColName = $(outputCol)
      val shouldDropLast = $(dropLast)
-   #+END_SRC
-   首先进行ML属性的组装过程：
-   #+BEGIN_SRC scala
      var outputAttrGroup = AttributeGroup.fromStructField(
        transformSchema(dataset.schema)(outputColName))
      if (outputAttrGroup.size < 0) {

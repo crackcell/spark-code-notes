@@ -1,0 +1,15 @@
+# -*- mode: org -*-
+
+#+TITLE: Attribute
+#+AUTHOR: Menglong TAN
+#+EMAIL: tanmenglong AT gmail DOT com
+#+DATE: Sat Jan 28 20:34:58 2017
+#+STYLE: <link rel="stylesheet" type="text/css" href="http://blog.crackcell.com/static/org-mode/org-mode.css" />
+#+OPTIONS: ^:{}
+
+#+BEGIN_HTML
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+#+END_HTML
+
+* 简介
+  Attribute是Spark新机器学习API引入的另一个大特性（另外一个DataFrame API）。它的作用是在数据中保存meta信息
