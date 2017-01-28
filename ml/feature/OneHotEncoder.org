@@ -1,0 +1,67 @@
+# -*- mode: org -*-
+
+#+TITLE: OneHotEncoder
+#+AUTHOR: Menglong TAN
+#+EMAIL: tanmenglong AT gmail DOT com
+#+DATE: Sat Jan 28 20:14:56 2017
+#+STYLE: <link rel="stylesheet" type="text/css" href="http://blog.crackcell.com/static/org-mode/org-mode.css" />
+#+OPTIONS: ^:{}
+
+#+BEGIN_HTML
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+#+END_HTML
+
+* 简介
+  对输入列进行one-hot编码，以向量形式输出
+* 代码笔记
+  - OneHotEncoder是一个Transformer，对应一个输入列，一个输出列
+  - 有一个略怪异的droplast特性，默认是true，可以用setDropLast设置。如果为true，会不对最后一个出现的向量进行编码，对应的，会产生一个空向量。个人习惯关掉这个开关
+** 工作流程
+   #+BEGIN_SRC scala
+   @Since("2.0.0")
+   override def transform(dataset: Dataset[_]): DataFrame = {
+     // schema transformation
+     val inputColName = $(inputCol)
+     val outputColName = $(outputCol)
+     val shouldDropLast = $(dropLast)
+     var outputAttrGroup = AttributeGroup.fromStructField(
+       transformSchema(dataset.schema)(outputColName))
+     if (outputAttrGroup.size < 0) {
+       // If the number of attributes is unknown, we check the values from the input column.
+       val numAttrs = dataset.select(col(inputColName).cast(DoubleType)).rdd.map(_.getDouble(0))
+         .aggregate(0.0)(
+           (m, x) => {
+             assert(x <= Int.MaxValue,
+               s"OneHotEncoder only supports up to ${Int.MaxValue} indices, but got $x")
+             assert(x >= 0.0 && x == x.toInt,
+               s"Values from column $inputColName must be indices, but got $x.")
+             math.max(m, x)
+           },
+           (m0, m1) => {
+             math.max(m0, m1)
+           }
+         ).toInt + 1
+       val outputAttrNames = Array.tabulate(numAttrs)(_.toString)
+       val filtered = if (shouldDropLast) outputAttrNames.dropRight(1) else outputAttrNames
+       val outputAttrs: Array[Attribute] =
+         filtered.map(name => BinaryAttribute.defaultAttr.withName(name))
+       outputAttrGroup = new AttributeGroup(outputColName, outputAttrs)
+     }
+     val metadata = outputAttrGroup.toMetadata()
+
+     // data transformation
+     val size = outputAttrGroup.size
+     val oneValue = Array(1.0)
+     val emptyValues = Array.empty[Double]
+     val emptyIndices = Array.empty[Int]
+     val encode = udf { label: Double =>
+       if (label < size) {
+         Vectors.sparse(size, Array(label.toInt), oneValue)
+       } else {
+         Vectors.sparse(size, emptyIndices, emptyValues)
+       }
+     }
+
+     dataset.select(col("*"), encode(col(inputColName).cast(DoubleType)).as(outputColName, metadata))
+   }
+   #+END_SRC
