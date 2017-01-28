@@ -60,10 +60,10 @@
          filtered.map(name => BinaryAttribute.defaultAttr.withName(name))
        outputAttrGroup = new AttributeGroup(outputColName, outputAttrs)
      }
-     val metadata = outputAttrGroup.toMetadata()
    #+END_SRC
-   yishang 
+   如果从transformSchema里没有获取成功属性个数，遍历一遍整个数据集，获取所有取值可能，用索引构建属性名，如果掉到这个分支，效率会大幅降低
    #+BEGIN_SRC scala
+     val metadata = outputAttrGroup.toMetadata()
      // data transformation
      val size = outputAttrGroup.size
      val oneValue = Array(1.0)
@@ -80,3 +80,4 @@
      dataset.select(col("*"), encode(col(inputColName).cast(DoubleType)).as(outputColName, metadata))
    }
    #+END_SRC
+   剩下的就是实际遍历数据，执行编码的过程了。简单理解，就是把输入列的Double类型值强制转换成Int，作为稀疏向量的下标
