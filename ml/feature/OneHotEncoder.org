@@ -22,9 +22,6 @@
    override def transform(dataset: Dataset[_]): DataFrame = {
    #+END_SRC
    首先进行ML属性的组装过程：
-   - transformSchema组装输出列的schema：
-     1. 校验输入列的类型为NumericType
-     2. 校验输出列不存在
    #+BEGIN_SRC scala
      // schema transformation
      val inputColName = $(inputCol)
@@ -32,6 +29,16 @@
      val shouldDropLast = $(dropLast)
      var outputAttrGroup = AttributeGroup.fromStructField(
        transformSchema(dataset.schema)(outputColName))
+   #+END_SRC
+   - transformSchema组装输出列的schema：
+     1. 校验输入列的类型为NumericType
+     2. 校验输出列不存在
+     3. 从输入列的ML属性中提取属性名
+        - 对于NominalAttribute：提取每个value作为名字，否则以取值下标作为名字
+        - 对于BinaryAttribute：同nominal
+        - 对于NumericAttribute：抛出异常，不能为
+     4. 封装输出列属性BinaryAttribute
+   #+BEGIN_SRC scala
      if (outputAttrGroup.size < 0) {
        // If the number of attributes is unknown, we check the values from the input column.
        val numAttrs = dataset.select(col(inputColName).cast(DoubleType)).rdd.map(_.getDouble(0))
