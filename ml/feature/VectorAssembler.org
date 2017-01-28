@@ -91,7 +91,10 @@
        }
      }
      val metadata = new AttributeGroup($(outputCol), attrs).toMetadata()
-
+   #+END_SRC
+   提取完ML属性之后，开始进行真正的数据处理：
+   - 定义对每行执行操作的udf。这里有个技巧，如果需要对整行的数据进行处理，该怎么写：#r.toSeq: _*#
+   #+BEGIN_SRC scala
      // Data transformation.
      val assembleFunc = udf { r: Row =>
        VectorAssembler.assemble(r.toSeq: _*)
