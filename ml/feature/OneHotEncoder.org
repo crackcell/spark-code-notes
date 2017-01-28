@@ -12,7 +12,7 @@
 #+END_HTML
 
 * 简介
-  对输入列进行one-hot编码，以向量形式输出
+  对输入列进行one-hot编码，以向量形式输出。
 * 代码笔记
   - OneHotEncoder是一个Transformer，对应一个输入列，一个输出列
   - 有一个略怪异的droplast特性，默认是true，会不对最后一个出现的向量进行编码，而产生一个空向量。个人习惯关掉这个开关，用setDropLast设置
@@ -61,7 +61,7 @@
        outputAttrGroup = new AttributeGroup(outputColName, outputAttrs)
      }
    #+END_SRC
-   如果从transformSchema里没有获取成功属性个数，遍历一遍整个数据集，获取所有取值可能，用索引构建属性名，如果掉到这个分支，效率会大幅降低
+   如果从transformSchema里没有获取成功属性个数，遍历一遍整个数据集，获取所有取值可能，用索引构建属性名，如果掉到这个分支，效率会大幅降低。
    #+BEGIN_SRC scala
      val metadata = outputAttrGroup.toMetadata()
      // data transformation
@@ -80,4 +80,4 @@
      dataset.select(col("*"), encode(col(inputColName).cast(DoubleType)).as(outputColName, metadata))
    }
    #+END_SRC
-   剩下的就是实际遍历数据，执行编码的过程了。简单理解，就是把输入列的Double类型值强制转换成Int，作为稀疏向量的下标
+   剩下的就是实际遍历数据，执行编码的过程了。简单理解，就是把输入列的Double类型值强制转换成Int，作为稀疏向量的下标。
