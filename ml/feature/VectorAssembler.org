@@ -11,6 +11,11 @@
 <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 #+END_HTML
 
-* VectorAssember
-** 用途
-   将多个输入列整合成一个向量。
+* 用途
+  将多个输入列整合成一个向量。例如：
+  #+BEGIN_SRC scala
+  val assembler = new VectorAssembler()
+    .setInputCols(Array("fea1", "fea2"))
+    .setOutputCol("features")
+  val newdata = assembler.transform(dataset)
+  #+END_SRC
