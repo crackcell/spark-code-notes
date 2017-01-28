@@ -81,3 +81,62 @@
    }
    #+END_SRC
    剩下的就是实际遍历数据，执行编码的过程了。简单理解，就是把输入列的Double类型值强制转换成Int，作为稀疏向量的下标。
+** transformSchema
+   #+BEGIN_SRC scala
+   @Since("1.4.0")
+   override def transformSchema(schema: StructType): StructType = {
+     val inputColName = $(inputCol)
+     val outputColName = $(outputCol)
+
+     require(schema(inputColName).dataType.isInstanceOf[NumericType],
+       s"Input column must be of type NumericType but got ${schema(inputColName).dataType}")
+     val inputFields = schema.fields
+     require(!inputFields.exists(_.name == outputColName),
+       s"Output column $outputColName already exists.")
+
+     val inputAttr = Attribute.fromStructField(schema(inputColName))
+     val outputAttrNames: Option[Array[String]] = inputAttr match {
+       case nominal: NominalAttribute =>
+         if (nominal.values.isDefined) {
+           nominal.values
+         } else if (nominal.numValues.isDefined) {
+           nominal.numValues.map(n => Array.tabulate(n)(_.toString))
+         } else {
+           None
+         }
+       case binary: BinaryAttribute =>
+         if (binary.values.isDefined) {
+           binary.values
+         } else {
+           Some(Array.tabulate(2)(_.toString))
+         }
+       case _: NumericAttribute =>
+         throw new RuntimeException(
+           s"The input column $inputColName cannot be numeric.")
+       case _ =>
+         None // optimistic about unknown attributes
+     }
+
+     val filteredOutputAttrNames = outputAttrNames.map { names =>
+       if ($(dropLast)) {
+         require(names.length > 1,
+           s"The input column $inputColName should have at least two distinct values.")
+         names.dropRight(1)
+       } else {
+         names
+       }
+     }
+
+     val outputAttrGroup = if (filteredOutputAttrNames.isDefined) {
+       val attrs: Array[Attribute] = filteredOutputAttrNames.get.map { name =>
+         BinaryAttribute.defaultAttr.withName(name)
+       }
+       new AttributeGroup($(outputCol), attrs)
+     } else {
+       new AttributeGroup($(outputCol))
+     }
+
+     val outputFields = inputFields :+ outputAttrGroup.toStructField()
+     StructType(outputFields)
+   }
+   #+END_SRC
