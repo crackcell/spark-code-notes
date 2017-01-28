@@ -15,7 +15,7 @@
   对输入列进行one-hot编码，以向量形式输出
 * 代码笔记
   - OneHotEncoder是一个Transformer，对应一个输入列，一个输出列
-  - 有一个略怪异的droplast特性，默认是true，可以用setDropLast设置。如果为true，会不对最后一个出现的向量进行编码，对应的，会产生一个空向量。个人习惯关掉这个开关
+  - 有一个略怪异的droplast特性，默认是true，会不对最后一个出现的向量进行编码，而产生一个空向量。个人习惯关掉这个开关，用setDropLast设置
 ** 工作流程
    #+BEGIN_SRC scala
    @Since("2.0.0")
@@ -24,6 +24,9 @@
      val inputColName = $(inputCol)
      val outputColName = $(outputCol)
      val shouldDropLast = $(dropLast)
+   #+END_SRC
+   首先进行ML属性的组装过程：
+   #+BEGIN_SRC scala
      var outputAttrGroup = AttributeGroup.fromStructField(
        transformSchema(dataset.schema)(outputColName))
      if (outputAttrGroup.size < 0) {
@@ -48,7 +51,9 @@
        outputAttrGroup = new AttributeGroup(outputColName, outputAttrs)
      }
      val metadata = outputAttrGroup.toMetadata()
-
+   #+END_SRC
+   yishang 
+   #+BEGIN_SRC scala
      // data transformation
      val size = outputAttrGroup.size
      val oneValue = Array(1.0)
