@@ -1,0 +1,16 @@
+# -*- mode: org -*-
+
+#+TITLE: VectorAssember
+#+AUTHOR: Menglong TAN
+#+EMAIL: tanmenglong AT gmail DOT com
+#+DATE: Sat Jan 28 19:24:56 2017
+#+STYLE: <link rel="stylesheet" type="text/css" href="http://blog.crackcell.com/static/org-mode/org-mode.css" />
+#+OPTIONS: ^:{}
+
+#+BEGIN_HTML
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+#+END_HTML
+
+* VectorAssember
+** 用途
+   将多个输入列整合成一个向量。
