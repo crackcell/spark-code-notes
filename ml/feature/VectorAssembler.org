@@ -11,7 +11,7 @@
 <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 #+END_HTML
 
-* 用途
+* 简介
   将多个输入列整合成一个向量，例如：
   #+BEGIN_SRC scala
   val assembler = new VectorAssembler()
@@ -28,7 +28,7 @@
   - VectorAssembler是一个Transformer
   - 接受多个输入列：HasInputCols
   - 输出一列
-** 工作流程
+** transform
    #+BEGIN_SRC scala
    @Since("2.0.0")
    override def transform(dataset: Dataset[_]): DataFrame = {
