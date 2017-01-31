@@ -94,7 +94,8 @@
    #+END_SRC
    提取完ML属性之后，开始进行真正的数据处理：
    - 定义对每行执行操作的udf。这里有个技巧，如果需要对整行的数据进行处理，该怎么写：
-     - 在DataFrame API里面用struct(args: _*)取到Row
+     - args是一个Array[Column]，表示需要传入那些列
+     - 传参的时候用struct(args: _*)转换成Row的格式
      - 在定义接受Row的udf
    #+BEGIN_SRC scala
      // Data transformation.
